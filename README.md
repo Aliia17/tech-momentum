@@ -55,6 +55,50 @@ Stages (`pipeline/`):
 7. **techmom** — cosine LINK matrix + similarity-weighted peer returns
 8. **tests** — Fama-MacBeth and quintile portfolio sorts → `results/*.csv`
 
+## Step-by-step for someone who has never used a terminal (Windows)
+
+Every command in this README is typed into **PowerShell** — Windows' built-in
+command window. (On Mac/Linux, use the Terminal app instead; commands are the
+same except paths use `/`.)
+
+1. **Open PowerShell**: press the Windows key, type `powershell`, press Enter.
+   A blue/black window appears with a blinking cursor. You type commands there
+   and press Enter to run them.
+2. **Go to the project folder** (adjust the path to where the folder lives):
+   ```powershell
+   cd "C:\Users\<you>\Desktop\Chicago Global\tech-momentum"
+   ```
+3. **Check Python is installed**:
+   ```powershell
+   python --version
+   ```
+   You want to see `Python 3.12.x` (3.11+ is fine). If instead you get an
+   error, or a Microsoft Store window opens: install Python from
+   https://www.python.org/downloads/ and — IMPORTANT — tick the
+   **"Add python.exe to PATH"** checkbox in the installer, then close and
+   reopen PowerShell and try again.
+4. **Install the dependencies** (one-time, ~5 min):
+   ```powershell
+   python -m pip install torch --index-url https://download.pytorch.org/whl/cu128   # NVIDIA GPU
+   # ...or, if the machine has no NVIDIA GPU:  python -m pip install torch
+   python -m pip install -r requirements.txt
+   ```
+5. **Run the 5-minute smoke test** — always do this first:
+   ```powershell
+   python run_pipeline.py --sample
+   ```
+   If it ends with result tables printed, the machine is set up correctly.
+6. **Run the real pipeline** (hours; safe to leave unattended, and every
+   heavy stage resumes where it stopped if interrupted):
+   ```powershell
+   python run_pipeline.py
+   ```
+   Results land in the `results\` folder as CSV files (open in Excel).
+
+Useful variations: `python run_pipeline.py --list` shows all stages;
+`--only tests` reruns just the statistics; `--from cluster` reruns from
+clustering onward; `--skip download` skips the download.
+
 ## Reproducing from scratch (for a new user)
 
 ```bash
