@@ -1,8 +1,12 @@
 # Pipeline Roadmap — who runs what, in which order, and why
 
-This is the operator's manual. It assumes nothing beyond: Python 3.12, the
-packages in `requirements.txt`, disk space (~15 GB), and optionally an NVIDIA
-GPU (10-50x faster embeddings; CPU works).
+This is the operator's/maintainer's reference. **First-time users should start
+with [README.md](README.md)** — it has the plain-language walkthrough for
+running the pipeline. Come here to look things up: stage dependencies, restart
+rules, the API-key procedure, data-source substitutions, and what's next.
+
+Assumes: Python 3.12, the packages in `requirements.txt`, disk space (~15 GB),
+and optionally an NVIDIA GPU (10-50x faster embeddings; CPU works).
 
 ## The picture
 

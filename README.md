@@ -5,6 +5,11 @@ Momentum in China: Large Language Model Meets Simple Classifications"** (SSRN 52
 adapted to **US data** following the paper's US antecedent, Lee, Sun, Wang & Zhang
 (2019, *JFE*), "Technological Links and Predictable Returns".
 
+> **Start here** if you just want to run the pipeline — everything needed is on
+> this page. For the internals — stage dependency tables, restart rules, the
+> live-data API key procedure, data-source substitutions, and the research
+> roadmap — see **[ROADMAP.md](ROADMAP.md)**.
+
 ## The idea
 
 Firms whose patents describe similar technology are "technology-linked". When a firm's
