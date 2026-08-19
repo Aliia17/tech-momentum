@@ -74,14 +74,24 @@ def fama_macbeth(panel: pd.DataFrame, signal: str) -> pd.DataFrame:
 
 
 def portfolio_sort(panel: pd.DataFrame, signal: str) -> pd.DataFrame:
-    """Orthogonalize signal on controls per month, sort into quintiles."""
-    port_rets: dict[int, dict] = {}
+    """Orthogonalize signal on controls per month, sort into quintiles.
+
+    Paper hygiene applied: cross-sectional winsorization of forward
+    returns, micro-cap filter (bottom 20% by mcap dropped monthly, cf.
+    the paper's shell-value robustness), and both equal- and value-
+    weighted portfolio returns (paper's Table 6 is value-weighted).
+    """
+    ew: dict[int, dict] = {}
+    vw: dict[int, dict] = {}
     for month, cs in panel.groupby("month"):
-        cs = cs.dropna(subset=["fwd_ret", signal])
+        cs = cs.dropna(subset=["fwd_ret", signal, "ln_mcap"])
+        cs = cs[cs["ln_mcap"] >= cs["ln_mcap"].quantile(0.20)]
         if len(cs) < config.MIN_FIRMS_PER_MONTH:
             continue
+        cs = cs.assign(fwd_w=winsorize(cs["fwd_ret"]),
+                       mcap=np.exp(cs["ln_mcap"]))
         avail = [c for c in CONTROLS if cs[c].notna().sum() > 20]
-        X = cs[avail].fillna(cs[avail].median())
+        X = cs[avail].apply(winsorize).fillna(cs[avail].median())
         X = add_industry_dummies(cs, X)
         X = sm.add_constant(X)
         resid = sm.OLS(winsorize(cs[signal]), X).fit().resid
@@ -91,16 +101,23 @@ def portfolio_sort(panel: pd.DataFrame, signal: str) -> pd.DataFrame:
         except ValueError:
             continue
         for p in range(config.N_PORTFOLIOS):
-            port_rets.setdefault(p, {})[month] = cs.loc[q == p, "fwd_ret"].mean()
+            grp = cs.loc[q == p]
+            if grp.empty:
+                continue
+            ew.setdefault(p, {})[month] = grp["fwd_w"].mean()
+            vw.setdefault(p, {})[month] = np.average(grp["fwd_w"],
+                                                     weights=grp["mcap"])
 
     rows = []
-    for p in sorted(port_rets):
-        mean, t = nw_tstat(pd.Series(port_rets[p]), config.NEWEY_WEST_LAGS)
-        rows.append({"portfolio": f"Q{p + 1}", "mean_fwd_ret": mean, "t_nw": t})
-    ls = (pd.Series(port_rets[max(port_rets)])
-          - pd.Series(port_rets[min(port_rets)]))
-    mean, t = nw_tstat(ls, config.NEWEY_WEST_LAGS)
-    rows.append({"portfolio": "Q5-Q1", "mean_fwd_ret": mean, "t_nw": t})
+    for scheme, ports in (("EW", ew), ("VW", vw)):
+        for p in sorted(ports):
+            mean, t = nw_tstat(pd.Series(ports[p]), config.NEWEY_WEST_LAGS)
+            rows.append({"weighting": scheme, "portfolio": f"Q{p + 1}",
+                         "mean_fwd_ret": mean, "t_nw": t})
+        ls = (pd.Series(ports[max(ports)]) - pd.Series(ports[min(ports)]))
+        mean, t = nw_tstat(ls, config.NEWEY_WEST_LAGS)
+        rows.append({"weighting": scheme, "portfolio": "Q5-Q1",
+                     "mean_fwd_ret": mean, "t_nw": t})
     return pd.DataFrame(rows)
 
 
@@ -142,6 +159,10 @@ def main(sample: bool) -> None:
     for c in CONTROLS:
         if c not in panel.columns:
             panel[c] = np.nan
+    # sanitize: infs (e.g. turnover with zero recorded shares) become NaN,
+    # handled downstream by fillna/dropna
+    num_cols = panel.select_dtypes(include="number").columns
+    panel[num_cols] = panel[num_cols].replace([np.inf, -np.inf], np.nan)
     print(f"test panel: {len(panel):,} firm-months, "
           f"{panel['month'].nunique()} months")
 
