@@ -11,6 +11,7 @@ Lee, Sun, Wang & Zhang (2019, JFE), using free sources:
               of the paper's bge-large-zh-v1.5)
 """
 
+import os
 from pathlib import Path
 
 # ---------------------------------------------------------------- paths
@@ -62,6 +63,19 @@ EMBED_SHARD_SIZE = 100_000       # abstracts per .npy shard (resumable)
 N_CLUSTERS = 500                 # paper: K = 500 (vs 651 IPC subclasses)
 CLUSTER_FIT_SAMPLE = 100_000     # paper: K-means fit on 100k random patents
 SEED = 42
+
+# ---------------------------------------------------------------- live updates
+# Post-2024 patent data requires a (free, ID-verified) USPTO Open Data
+# Portal API key. A HUMAN inserts it in ONE of two ways:
+#   1. set environment variable  USPTO_ODP_API_KEY
+#   2. paste the key into a file named  .odp_api_key  next to this config
+#      (the file is gitignored — the key never enters version control)
+# The live-update stage reads ODP_API_KEY; while it is None, the pipeline
+# runs on the frozen 12/31/2024 Zenodo release only. See ROADMAP.md.
+_key_file = ROOT / ".odp_api_key"
+ODP_API_KEY = os.environ.get("USPTO_ODP_API_KEY") or (
+    _key_file.read_text(encoding="utf-8").strip() if _key_file.exists() else None
+)
 
 # ---------------------------------------------------------------- signal/tests
 MIN_FIRMS_PER_MONTH = 30         # skip months with too few firms with vectors

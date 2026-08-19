@@ -7,6 +7,9 @@ data/sample/
 # results are small; keep them versioned for comparability
 !results/
 
+# secrets — API keys never enter version control
+.odp_api_key
+
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
