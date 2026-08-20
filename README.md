@@ -8,7 +8,8 @@ adapted to **US data** following the paper's US antecedent, Lee, Sun, Wang & Zha
 > **Start here** if you just want to run the pipeline — everything needed is on
 > this page. For the internals — stage dependency tables, restart rules, the
 > live-data API key procedure, data-source substitutions, and the research
-> roadmap — see **[ROADMAP.md](ROADMAP.md)**.
+> roadmap — see **[ROADMAP.md](ROADMAP.md)**. For the empirical findings —
+> all specifications, tables, and interpretation — see **[RESULTS.md](RESULTS.md)**.
 
 ## The idea
 
