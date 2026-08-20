@@ -32,16 +32,19 @@ def load_embeddings(emb_dir: Path) -> tuple[np.ndarray, pd.DataFrame]:
     return np.vstack(shards), index
 
 
-def main(sample: bool, variant: str = "") -> None:
+def main(sample: bool, variant: str = "", emb: str = "", k: int = 0) -> None:
+    """variant tags the OUTPUT files; emb picks the embedding source dir
+    (defaults to variant); k overrides config.N_CLUSTERS."""
     suffix = "_sample" if sample else (f"_{variant}" if variant else "")
-    emb_dir = config.DATA_PROCESSED / f"embeddings{suffix}"
+    emb_suffix = "_sample" if sample else (f"_{emb}" if emb else suffix)
+    emb_dir = config.DATA_PROCESSED / f"embeddings{emb_suffix}"
     X, index = load_embeddings(emb_dir)
     print(f"embeddings: {X.shape}")
 
     # Fit sample: prefer the full-corpus random sample (stage 04b) so the
     # 500 technology themes represent the whole patent space, as in the
     # paper; fall back to sampling the firm-linked embeddings.
-    corpus_path = config.DATA_PROCESSED / f"corpus_fit_embeddings{suffix}.npy"
+    corpus_path = config.DATA_PROCESSED / f"corpus_fit_embeddings{emb_suffix}.npy"
     rng = np.random.default_rng(config.SEED)
     if not sample and corpus_path.exists():
         fit_X = np.load(corpus_path)
@@ -51,7 +54,7 @@ def main(sample: bool, variant: str = "") -> None:
         fit_X = X[rng.choice(len(X), size=n_fit, replace=False)]
         print(f"fitting on sample of linked embeddings: {fit_X.shape}")
     n_fit = len(fit_X)
-    k = min(config.N_CLUSTERS, max(2, n_fit // 20))
+    k = min(k or config.N_CLUSTERS, max(2, n_fit // 20))
 
     # elbow diagnostic around the chosen K (cheap, coarse grid)
     sse_rows = []
@@ -85,6 +88,8 @@ def main(sample: bool, variant: str = "") -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--sample", action="store_true")
-    ap.add_argument("--variant", default="", help="e.g. 'large' for bge-large run")
+    ap.add_argument("--variant", default="", help="output tag, e.g. 'large'")
+    ap.add_argument("--emb", default="", help="embedding source tag (default: variant)")
+    ap.add_argument("--k", type=int, default=0, help="override N_CLUSTERS")
     a = ap.parse_args()
-    main(a.sample, a.variant)
+    main(a.sample, a.variant, a.emb, a.k)
