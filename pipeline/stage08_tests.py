@@ -121,12 +121,12 @@ def portfolio_sort(panel: pd.DataFrame, signal: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def main(sample: bool, variant: str = "") -> None:
+def main(sample: bool, variant: str = "", returns_name: str = "returns") -> None:
     suffix = "_sample" if sample else (f"_{variant}" if variant else "")
     src_dir = config.SAMPLE_DIR if sample else config.DATA_INTERIM
 
     techmom = pd.read_parquet(config.DATA_PROCESSED / f"techmom{suffix}.parquet")
-    returns = pd.read_parquet(src_dir / "returns.parquet")
+    returns = pd.read_parquet(src_dir / f"{returns_name}.parquet")
     techmom["month"] = pd.to_datetime(techmom["month"])
     returns["month"] = pd.to_datetime(returns["month"])
 
@@ -191,6 +191,8 @@ def main(sample: bool, variant: str = "") -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--sample", action="store_true")
-    ap.add_argument("--variant", default="", help="e.g. 'large' for bge-large run")
+    ap.add_argument("--variant", default="", help="results tag, e.g. 'large'")
+    ap.add_argument("--returns", default="returns",
+                    help="returns file basename, e.g. returns_crsp")
     a = ap.parse_args()
-    main(a.sample, a.variant)
+    main(a.sample, a.variant, a.returns)

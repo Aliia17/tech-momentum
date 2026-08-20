@@ -49,12 +49,17 @@ def techmom_one_month(vecs: pd.DataFrame, rets: pd.Series) -> pd.Series:
     return pd.Series(tm, index=firms).dropna()
 
 
-def main(sample: bool, variant: str = "") -> None:
+def main(sample: bool, variant: str = "", vectors_tag: str | None = None,
+         returns_name: str = "returns") -> None:
     suffix = "_sample" if sample else (f"_{variant}" if variant else "")
+    if vectors_tag == "base":          # sentinel for the v1 (untagged) vectors
+        vectors_tag = ""
+    vec_suffix = (suffix if vectors_tag is None
+                  else (f"_{vectors_tag}" if vectors_tag else ""))
     src_dir = config.SAMPLE_DIR if sample else config.DATA_INTERIM
 
-    vectors = pd.read_parquet(config.DATA_PROCESSED / f"firm_vectors{suffix}.parquet")
-    returns = pd.read_parquet(src_dir / "returns.parquet",
+    vectors = pd.read_parquet(config.DATA_PROCESSED / f"firm_vectors{vec_suffix}.parquet")
+    returns = pd.read_parquet(src_dir / f"{returns_name}.parquet",
                               columns=["month", "ticker", "ret"])
     returns["month"] = pd.to_datetime(returns["month"])
     vectors["month"] = pd.to_datetime(vectors["month"])
@@ -81,6 +86,10 @@ def main(sample: bool, variant: str = "") -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--sample", action="store_true")
-    ap.add_argument("--variant", default="", help="e.g. 'large' for bge-large run")
+    ap.add_argument("--variant", default="", help="output tag, e.g. 'large'")
+    ap.add_argument("--vectors", default=None,
+                    help="firm_vectors tag to read (default: same as variant; '' = v1)")
+    ap.add_argument("--returns", default="returns",
+                    help="returns file basename, e.g. returns_crsp")
     a = ap.parse_args()
-    main(a.sample, a.variant)
+    main(a.sample, a.variant, a.vectors, a.returns)
