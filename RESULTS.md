@@ -20,15 +20,21 @@ how to run in [README.md](README.md).
 
 ## 2. Headline: Fama-MacBeth, month-t signal → month-t+1 excess return
 
-TECHMOM_BGE coefficient (t-stat) across specifications, 2010–2024:
+TECHMOM_BGE coefficient (t-stat) across specifications, 2010–2024. Rows vary
+along two axes: the **universe** (full = all matched firms including ~570
+foreign ADRs like TSMC/Toyota/Sony, which are also peers inside everyone's
+TECHMOM; domestic = US-incorporated common stock only, the CRSP universe)
+and the **return data** (Yahoo vs CRSP). The middle row changes ONLY the
+universe relative to row 1 — the controlled comparison showing the collapse
+comes from dropping cross-border links, not from data quality:
 
-| Specification | coef | t | Verdict |
-|---|---|---|---|
-| Full universe incl. global ADRs — bge-small, K=500 | 0.031 | **2.00** | significant, 5% |
-| same — bge-large, K=500 | 0.018 | 1.18 | n.s. |
-| same — bge-large, K=250 / K=1000 | 0.017 / 0.019 | 0.97 / 1.34 | n.s. |
-| Domestic US only — Yahoo returns | 0.008 | 0.50 | n.s. |
-| Domestic US only — **CRSP** returns (2010–2023) | −0.004 | −0.25 | **zero** |
+| Universe | Model/K | Returns | coef | t | Verdict |
+|---|---|---|---|---|---|
+| Full (incl. ADRs) | bge-small, K=500 | Yahoo | 0.031 | **2.00** | significant, 5% |
+| Full (incl. ADRs) | bge-large, K=500 | Yahoo | 0.018 | 1.18 | n.s. |
+| Full (incl. ADRs) | bge-large, K=250 / 1000 | Yahoo | 0.017 / 0.019 | 0.97 / 1.34 | n.s. |
+| Domestic only | bge-small, K=500 | Yahoo | 0.008 | 0.50 | n.s. — universe effect isolated |
+| Domestic only | bge-small, K=500 | **CRSP** (to 2023) | −0.004 | −0.25 | **zero** on gold-standard data |
 
 Classification-based TECHMOM (CPC subclasses, the paper's IPC analogue):
 t = 1.63 in the full universe — always weaker than the LLM measure, matching
