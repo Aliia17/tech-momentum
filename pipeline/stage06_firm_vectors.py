@@ -39,8 +39,8 @@ def build(patents: pd.DataFrame, label_col: str, method: str,
     return pd.concat(rows, ignore_index=True)
 
 
-def main(sample: bool) -> None:
-    suffix = "_sample" if sample else ""
+def main(sample: bool, variant: str = "") -> None:
+    suffix = "_sample" if sample else (f"_{variant}" if variant else "")
     src_dir = config.SAMPLE_DIR if sample else config.DATA_INTERIM
 
     patents = pd.read_parquet(src_dir / "patents.parquet",
@@ -66,4 +66,6 @@ def main(sample: bool) -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--sample", action="store_true")
-    main(ap.parse_args().sample)
+    ap.add_argument("--variant", default="", help="e.g. 'large' for bge-large run")
+    a = ap.parse_args()
+    main(a.sample, a.variant)

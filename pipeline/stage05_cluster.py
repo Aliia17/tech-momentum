@@ -32,8 +32,8 @@ def load_embeddings(emb_dir: Path) -> tuple[np.ndarray, pd.DataFrame]:
     return np.vstack(shards), index
 
 
-def main(sample: bool) -> None:
-    suffix = "_sample" if sample else ""
+def main(sample: bool, variant: str = "") -> None:
+    suffix = "_sample" if sample else (f"_{variant}" if variant else "")
     emb_dir = config.DATA_PROCESSED / f"embeddings{suffix}"
     X, index = load_embeddings(emb_dir)
     print(f"embeddings: {X.shape}")
@@ -41,7 +41,7 @@ def main(sample: bool) -> None:
     # Fit sample: prefer the full-corpus random sample (stage 04b) so the
     # 500 technology themes represent the whole patent space, as in the
     # paper; fall back to sampling the firm-linked embeddings.
-    corpus_path = config.DATA_PROCESSED / "corpus_fit_embeddings.npy"
+    corpus_path = config.DATA_PROCESSED / f"corpus_fit_embeddings{suffix}.npy"
     rng = np.random.default_rng(config.SEED)
     if not sample and corpus_path.exists():
         fit_X = np.load(corpus_path)
@@ -85,4 +85,6 @@ def main(sample: bool) -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--sample", action="store_true")
-    main(ap.parse_args().sample)
+    ap.add_argument("--variant", default="", help="e.g. 'large' for bge-large run")
+    a = ap.parse_args()
+    main(a.sample, a.variant)
