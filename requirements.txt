@@ -13,3 +13,4 @@ requests==2.34.2
 yfinance==1.6.0
 tqdm==4.70.0
 pypdf==6.16.1
+pytest

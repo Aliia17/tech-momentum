@@ -1,12 +1,22 @@
 # Results — US Replication of "Technological Momentum" (SSRN 5249018)
 
-**TL;DR.** The pipeline replicates the paper's methodology end-to-end on free US
-data (1.23M patents, ~2,000 firms, 2010–2024). The paper's two qualitative
-claims hold: technological momentum predicts returns, and the LLM-based
-measure outperforms the classification-based one. But the US premium is a
-fraction of the Chinese one, and tracing it down yields the interesting part:
-**domestic US technological momentum is fully arbitraged away (t ≈ 0 on CRSP
-data); the surviving predictability sits in cross-border technology links.**
+> **Revision note.** These results supersede an earlier version of this file.
+> An external review found impossible value-weighted portfolio returns in the
+> committed results; the root cause (corrupted market caps and returns for
+> serial reverse-split penny stocks in the free price feed) has been fixed,
+> a test suite now guards the invariants, and every number below is from the
+> repaired panel. Details in §7. The headline changed: specifications that
+> previously appeared marginally significant are not, once the data is clean.
+
+**TL;DR.** The pipeline replicates the paper's methodology end-to-end on free
+US data (1.23M patents, ~2,000 firms, 2010–2024). Directionally the paper's
+claims appear: TECHMOM coefficients are positive and the LLM-based measure
+consistently beats the classification-based one. But **no US specification is
+statistically significant on clean data** (best t = 1.33). Combined with the
+strong published results for 1963–2012 (Lee et al. 2019, JFE) and for China
+2015–2024 (the replicated paper), the picture is coherent: **the US premium
+has decayed to statistical zero since publication**, with weak directional
+hints that what little remains involves cross-border technology links.
 
 ## 1. What was built
 
@@ -15,94 +25,98 @@ a 100k random sample of the full corpus) → trailing-12-month firm technology
 vectors → pairwise cosine `LINK` → `TECHMOM` = similarity-weighted peer
 return → Fama-MacBeth regressions and orthogonalized quintile sorts
 (controls: LnMCap, B/M, ROE, VOL, TO, REV + industry FE; Newey-West t-stats).
-Sources and substitutions vs the paper are documented in [ROADMAP.md](ROADMAP.md);
-how to run in [README.md](README.md).
+Returns panel is CRSP-first (returns, market caps, turnover) with Yahoo
+Finance filling only what CRSP cannot cover (foreign ADRs, post-2023), plus
+quarantine rules for unverifiable data. Sources and substitutions:
+[ROADMAP.md](ROADMAP.md); how to run: [README.md](README.md).
 
 ## 2. Headline: Fama-MacBeth, month-t signal → month-t+1 excess return
 
-TECHMOM_BGE coefficient (t-stat) across specifications, 2010–2024. Rows vary
-along two axes: the **universe** (full = all matched firms including ~570
-foreign ADRs like TSMC/Toyota/Sony, which are also peers inside everyone's
-TECHMOM; domestic = US-incorporated common stock only, the CRSP universe)
-and the **return data** (Yahoo vs CRSP). The middle row changes ONLY the
-universe relative to row 1 — the controlled comparison showing the collapse
-comes from dropping cross-border links, not from data quality:
+TECHMOM_BGE coefficient (t-stat), 2010–2024, repaired panel:
 
-| Universe | Model/K | Returns | coef | t | Verdict |
-|---|---|---|---|---|---|
-| Full (incl. ADRs) | bge-small, K=500 | Yahoo | 0.031 | **2.00** | significant, 5% |
-| Full (incl. ADRs) | bge-large, K=500 | Yahoo | 0.018 | 1.18 | n.s. |
-| Full (incl. ADRs) | bge-large, K=250 / 1000 | Yahoo | 0.017 / 0.019 | 0.97 / 1.34 | n.s. |
-| Domestic only | bge-small, K=500 | Yahoo | 0.008 | 0.50 | n.s. — universe effect isolated |
-| Domestic only | bge-small, K=500 | **CRSP** (to 2023) | −0.004 | −0.25 | **zero** on gold-standard data |
+| Universe | Model/K | coef | t | Verdict |
+|---|---|---|---|---|
+| Full (incl. ADRs) | bge-small, K=500 | 0.025 | 1.33 | n.s. |
+| Full (incl. ADRs) | bge-large, K=500 | 0.002 | 0.14 | n.s. |
+| Domestic US only | bge-small, K=500 (Yahoo) | 0.011 | 0.63 | n.s. |
+| Domestic US only | bge-small, K=500 (**CRSP**, to 2023) | −0.004 | −0.25 | zero |
 
-Classification-based TECHMOM (CPC subclasses, the paper's IPC analogue):
-t = 1.63 in the full universe — always weaker than the LLM measure, matching
-the paper's central claim about semantic vs taxonomic information.
+Classification-based TECHMOM (CPC subclasses): t = 0.44 in the headline
+spec — always weaker than the LLM measure, the paper's ordering.
 
 Comparison points: the paper reports coef ≈ 0.077 (t ≈ 4.2) in China
-2015–2024; Lee, Sun, Wang & Zhang (JFE 2019) found spreads of 0.6–1%/month
-in the US 1963–2012.
+2015–2024; Lee et al. (2019) found 0.6–1%/month spreads in the US 1963–2012.
 
 ## 3. Portfolio sorts
 
-Quintile sorts on TECHMOM orthogonalized to controls + industry (long Q5 /
-short Q1, monthly rebalance): spreads of 0.1–0.2%/month, statistically
-indistinguishable from zero in all specifications — consistent with the
-regression coefficient's implied spread (coef × quintile signal gap ≈
-0.3%/month, below detectability in 15 years of monthly data). In China the
-same arithmetic yields ≈0.75%/month, matching their reported 0.66–0.73%.
+Quintile sorts on orthogonalized TECHMOM (long Q5 / short Q1, monthly):
+spreads within ±0.23%/month, all |t| < 1.2, equal- and value-weighted.
+Quintile *levels* are now sensible (~1%/month, consistent with the market),
+confirming the repaired weights.
 
-## 4. The decomposition (the interesting finding)
+## 4. Supporting diagnostics (all on the repaired panel)
 
-Removing foreign-listed ADR firms (TSMC, Toyota, Sony, ASML, Ericsson, …)
-from the universe collapses the signal even on identical return data
-(t: 2.00 → 0.50). On gold-standard CRSP domestic data the signal is exactly
-zero. Reading:
+- **Alpha decay:** early half (2010–16) t = 1.43 (BGE) / 1.81 (CLS); late
+  half (2017–24) t = 0.47 / −0.74. The effect weakens to nothing in the
+  post-publication era — the McLean-Pontiff pattern.
+- **Cross-border hint:** full universe (with foreign ADR peers) t = 1.33 vs
+  domestic-only t = 0.63 on identical data. Directionally consistent with
+  residual predictability living in cross-border links, but the difference
+  is not statistically established.
+- **Control sensitivity:** dropping B/M+ROE or turnover moves the TECHMOM
+  t by <0.15 — proxy quality of controls is immaterial.
+- **K-robustness:** results similar at K = 250/500/1000.
+- **Model size:** bge-large (1024-dim, paper-faithful) does not strengthen
+  the signal — embedding sophistication cannot resurrect an arbitraged
+  premium.
 
-- **Publication decay, completed.** Lee et al. (2019) documented the domestic
-  US effect through 2012; post-publication, quant arbitrage ate it. Our CRSP
-  zero on 2010–2023 is that lifecycle's endpoint (cf. McLean & Pontiff 2016).
-- **Cross-border links still carry a premium.** Information flowing through
-  foreign tech peers is costlier to process and harder to arbitrage —
-  precisely the inattention mechanism the Chinese paper builds on, and why
-  the effect remains strong in China's retail-dominated market.
-- Caveat: dropping ADRs also removes the densest patent nodes, degrading
-  everyone's peer sets; part of the collapse may be measurement rather than
-  economics. A purpose-built test (domestic signal vs cross-border signal as
-  separate variables) is the natural next experiment.
+## 5. Interpretation
 
-## 5. Supporting diagnostics
-
-- **Alpha-decay split:** coefficients shrink early→late (2010–16 vs 2017–24),
-  with the LLM measure decaying slower than the classification measure —
-  the paper's "complex information is priced more slowly" thesis in decay form.
-  Neither half individually significant (power halves with the sample).
-- **Control sensitivity:** dropping the EDGAR-proxy controls (B/M, ROE) and
-  even turnover moves the TECHMOM t-stat by <0.15 — proxy quality is not
-  driving results (`results/fm_control_sensitivity.csv`).
-- **K-robustness:** elbow diagnostic supports K≈250–500; results at K=250,
-  500, 1000 are similar (mildly increasing in K for the large model).
-- **Bigger model ≠ stronger signal:** bge-large (1024-dim, paper-faithful)
-  underperforms bge-small everywhere — embedding sophistication cannot
-  resurrect an arbitraged premium.
+The three-study arc is internally consistent: strong premium in the US when
+patent data was effectively invisible to investors (1963–2012), strong
+premium today in a retail-dominated, arbitrage-constrained market (China),
+zero in the modern US where the mechanism has been public since 2019. Our
+contribution is documenting the endpoint on clean data with a reproducible
+pipeline. For a fund: the signal as published is not a US strategy in 2025;
+its value is the pipeline (any market, any patent corpus), the candidate-
+input role in multi-signal models, and the untested cross-border variant.
 
 ## 6. Known limitations
 
 Firm linking covers currently-registered SEC firms plus a hand-verified
-alias table for major subsidiaries/renames (QuantData-style full ownership
-consolidation, e.g. via 10-K Exhibit 21 parsing or the KPSS/DISCERN
-crosswalks, is the main upgrade). Yahoo returns carry survivorship bias
-(the CRSP runs address this); fundamentals are point-in-time EDGAR XBRL
-(shown above to be immaterial). Patent data frozen at 12/31/2024 (official
-final PatentsView release); live updates require a USPTO ODP API key
-(insertion point documented in ROADMAP.md).
+alias table (full ownership consolidation à la QuantData — Exhibit-21
+parsing or KPSS/DISCERN — is the main upgrade). Non-CRSP firm-months rely
+on Yahoo with quarantine rules. Fundamentals are point-in-time EDGAR XBRL
+(shown immaterial). Patents frozen at 12/31/2024 (final PatentsView
+release); the live-update key insertion point is documented in ROADMAP.md.
 
-## 7. For a trading application
+## 7. Post-review corrections and verification
 
-The signal, as published, is not a standalone US strategy in 2025 — that is
-the honest headline. Its value is as (a) a pipeline that can assemble this
-family of signals in any market with patent + price data, (b) a candidate
-*input* to multi-signal models, and (c) a pointer toward the cross-border
-version, which our decomposition suggests is where the remaining premium
-lives and which is not what the published papers trade.
+An external review of an earlier version found value-weighted portfolios
+losing ~0.5%/month over a period when the index quadrupled — impossible for
+a cap-weighted book of large patent holders — and correctly diagnosed the
+deeper issue: no tests, so impossible numbers could not fail.
+
+**Root cause.** Market cap was computed as adjusted price × current shares.
+For serial reverse-split penny stocks, Yahoo's adjustment inflates past
+prices by the cumulative split factor; combined with current share counts
+this manufactured fake mega-caps (one nano-cap carried an implied $316tn and
+81% of the value-weighted book while losing 9%/month). The same firms'
+return series were also corrupted, which had inflated the regression
+results (headline t = 2.00 → 1.33 after repair).
+
+**Fix** (`pipeline/stage03d_patch_mcap.py`): CRSP-first returns/caps/
+turnover wherever CRSP covers the firm-month; quarantine of corrupt
+non-CRSP tickers (reverse-split signatures, untradeable size); value
+weights only for verifiable caps (CRSP or established-ADR whitelist);
+finite-return enforcement.
+
+**Verification** (`tests/`, run `python -m pytest tests/`): 21 tests —
+unit tests (name normalization, hand-computed TECHMOM per eqs. (2)–(3),
+self-exclusion, winsorization, Newey-West) and invariant tests on the real
+artifacts, including the reviewer's assertion: any value-weighted panel
+return must sit in a plausible band of the market benchmark; top value
+weights must be recognizable mega-caps; returns finite; signal tails
+bounded; embeddings unit-norm; timing correct. The suite failed on first
+run (catching two further corrupt tickers and the contaminated peer
+returns) and passes in full on the repaired data.

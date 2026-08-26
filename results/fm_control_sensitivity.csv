@@ -1,7 +1,7 @@
 controls,signal,coef,t_nw
-full,techmom_bge,0.0305,2.0
-full,techmom_cls,0.0264,1.63
-price,techmom_bge,0.029,1.85
-price,techmom_cls,0.0259,1.58
-minimal,techmom_bge,0.0312,1.94
-minimal,techmom_cls,0.0278,1.67
+full,techmom_bge,0.0247,1.33
+full,techmom_cls,0.0084,0.44
+price,techmom_bge,0.0225,1.19
+price,techmom_cls,0.0071,0.37
+minimal,techmom_bge,0.0242,1.25
+minimal,techmom_cls,0.0075,0.39
