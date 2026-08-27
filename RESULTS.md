@@ -77,7 +77,8 @@ signal, where there is enough variation to diagnose)
 - **Cluster count K (correcting an earlier claim):** the SSE-vs-K curve is
   a scale-free power law — its log-log slope is flat (varies by ~0.025,
   sd 0.011) across K = 50..2000, and quadrupling K from 500 to 2000 buys
-  only 4.3% of SSE. There is **no elbow and no data-privileged K**; K=500
+  only 4.3% of SSE (figure: `results/sse_loglog.png`). There is **no elbow
+  and no data-privileged K**; K=500
   is a convention anchored to the paper (comparable to the 651 IPC / 596
   CPC classes), not an optimum. Consequently the LLM-vs-classification
   comparison is reported with (a) robustness across K = 250/500/1000 and
