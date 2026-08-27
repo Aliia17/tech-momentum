@@ -74,7 +74,22 @@ signal, where there is enough variation to diagnose)
   is not statistically established.
 - **Control sensitivity:** dropping B/M+ROE or turnover moves the TECHMOM
   t by <0.15 — proxy quality of controls is immaterial.
-- **K-robustness:** results similar at K = 250/500/1000.
+- **Cluster count K (correcting an earlier claim):** the SSE-vs-K curve is
+  a scale-free power law — its log-log slope is flat (varies by ~0.025,
+  sd 0.011) across K = 50..2000, and quadrupling K from 500 to 2000 buys
+  only 4.3% of SSE. There is **no elbow and no data-privileged K**; K=500
+  is a convention anchored to the paper (comparable to the 651 IPC / 596
+  CPC classes), not an optimum. Consequently the LLM-vs-classification
+  comparison is reported with (a) robustness across K = 250/500/1000 and
+  (b) a **K-free variant**: LINK computed as cosine similarity between
+  firms' mean patent embeddings, no discretization at all
+  (`pipeline/v3_continuous_link.py`, results `*_cont.csv`).
+  Outcome on the repaired panel (bge-large FM t-stats): K=250 → 1.12,
+  K=500 → 0.14, K=1000 → 1.07, continuous/K-free → 0.76; all long-short
+  spreads |t| < 0.9. The conclusion — no detectable US premium — holds at
+  every granularity and with none, so it does not rest on the
+  discretization. (The K=500 headline happens to be the weakest of the
+  four, so the headline is not favorably selected.)
 - **Embedding-model sensitivity:** the paper-faithful large model (headline)
   shows less signal than the small robustness variant (t = 0.14 vs 1.33).
   That the result varies this much across reasonable embedding choices — and

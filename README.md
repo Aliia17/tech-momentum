@@ -56,7 +56,9 @@ Stages (`pipeline/`):
 2. **link_firms** — normalized-name match of patent assignees to SEC registrants
 3. **returns** — Yahoo daily prices → monthly returns, ln(mcap), vol, turnover, reversal
 4. **embed** — abstracts → L2-normalized embeddings (sharded, resumable)
-5. **cluster** — MiniBatchKMeans, K=500 fit on 100k sample + SSE elbow diagnostic
+5. **cluster** — MiniBatchKMeans, K=500 (paper convention; SSE-vs-K is a
+   scale-free power law, so no K is data-privileged — see RESULTS §4 and the
+   K-free continuous variant)
 6. **firm_vectors** — trailing-12m patent counts per category, per firm-month
 7. **techmom** — cosine LINK matrix + similarity-weighted peer returns
 8. **tests** — Fama-MacBeth and quintile portfolio sorts → `results/*.csv`
