@@ -1,4 +1,4 @@
-"""Diagnostic — hunt the corrupted value weights (Ben's VW anomaly).
+"""Diagnostic — hunt the corrupted value weights.
 
 Symptom: Yahoo-based value-weighted quintiles average -0.51%/month
 2010-2024, which is impossible for a cap-weighted book of large US patent

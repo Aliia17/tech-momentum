@@ -81,3 +81,12 @@ ODP_API_KEY = os.environ.get("USPTO_ODP_API_KEY") or (
 MIN_FIRMS_PER_MONTH = 30         # skip months with too few firms with vectors
 N_PORTFOLIOS = 5                 # quintile sorts
 NEWEY_WEST_LAGS = 3              # paper: NW t-stats up to 3 lags
+
+# Clipping of PORTFOLIO returns in the sorts (FM regression variables keep
+# the paper's standard 1%/99% winsorization — that is a coefficient, not a
+# P&L). A clipped portfolio return is not tradeable, and clipping shrinks
+# the spread's variance faster than its mean, INFLATING t-stats
+# (reviewer-tested: planted-effect t 4.09 -> 5.53 at 1%; sign flips on a
+# skewed null). Default: light 0.1%/99.9% data-error guard; sorts are also
+# reported fully raw for comparison.
+SORT_CLIP_P = 0.001

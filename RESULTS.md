@@ -9,14 +9,17 @@
 > previously appeared marginally significant are not, once the data is clean.
 
 **TL;DR.** The pipeline replicates the paper's methodology end-to-end on free
-US data (1.23M patents, ~2,000 firms, 2010–2024). Directionally the paper's
-claims appear: TECHMOM coefficients are positive and the LLM-based measure
-consistently beats the classification-based one. But **no US specification is
-statistically significant on clean data** (best t = 1.33). Combined with the
-strong published results for 1963–2012 (Lee et al. 2019, JFE) and for China
-2015–2024 (the replicated paper), the picture is coherent: **the US premium
-has decayed to statistical zero since publication**, with weak directional
-hints that what little remains involves cross-border technology links.
+US data (1.23M patents, ~2,000 firms, 2010–2024), including the
+paper-faithful embedding model (bge-large, 1024-dim — the English sibling of
+the paper's bge-large-zh). **In that headline specification the US signal is
+indistinguishable from zero (t = 0.14)**; across all robustness variants
+(smaller embedding model, different cluster counts, data sources, universes)
+the t-statistic never exceeds 1.33 — nothing is significant on clean data.
+Combined with the strong published results for 1963–2012 (Lee et al. 2019,
+JFE) and for China 2015–2024 (the replicated paper), the picture is
+coherent: **the US premium has decayed to statistical zero since
+publication**, with weak directional hints that what little remains involves
+cross-border technology links.
 
 ## 1. What was built
 
@@ -32,17 +35,22 @@ quarantine rules for unverifiable data. Sources and substitutions:
 
 ## 2. Headline: Fama-MacBeth, month-t signal → month-t+1 excess return
 
-TECHMOM_BGE coefficient (t-stat), 2010–2024, repaired panel:
+TECHMOM_BGE coefficient (t-stat), 2010–2024, repaired panel. The headline is
+the paper-faithful specification: **bge-large (1024-dim), K=500, full
+universe** — the same model family and size logic as the paper's
+bge-large-zh. The faster bge-small variant is a robustness check, not the
+headline:
 
-| Universe | Model/K | coef | t | Verdict |
-|---|---|---|---|---|
-| Full (incl. ADRs) | bge-small, K=500 | 0.025 | 1.33 | n.s. |
-| Full (incl. ADRs) | bge-large, K=500 | 0.002 | 0.14 | n.s. |
-| Domestic US only | bge-small, K=500 (Yahoo) | 0.011 | 0.63 | n.s. |
-| Domestic US only | bge-small, K=500 (**CRSP**, to 2023) | −0.004 | −0.25 | zero |
+| Spec | Universe | Model/K | coef | t | Verdict |
+|---|---|---|---|---|---|
+| **HEADLINE** | Full (incl. ADRs) | **bge-large, K=500** | 0.002 | **0.14** | zero |
+| robustness | Full (incl. ADRs) | bge-small, K=500 | 0.025 | 1.33 | n.s. |
+| robustness | Domestic US only | bge-small, K=500 (Yahoo) | 0.011 | 0.63 | n.s. |
+| robustness | Domestic US only | bge-small, K=500 (**CRSP**, to 2023) | −0.004 | −0.25 | zero |
 
 Classification-based TECHMOM (CPC subclasses): t = 0.44 in the headline
-spec — always weaker than the LLM measure, the paper's ordering.
+spec — weaker than the small-model LLM measure, consistent with the paper's
+ordering, though on clean US data neither is distinguishable from zero.
 
 Comparison points: the paper reports coef ≈ 0.077 (t ≈ 4.2) in China
 2015–2024; Lee et al. (2019) found 0.6–1%/month spreads in the US 1963–2012.
@@ -54,7 +62,8 @@ spreads within ±0.23%/month, all |t| < 1.2, equal- and value-weighted.
 Quintile *levels* are now sensible (~1%/month, consistent with the market),
 confirming the repaired weights.
 
-## 4. Supporting diagnostics (all on the repaired panel)
+## 4. Supporting diagnostics (repaired panel; computed on the small-model
+signal, where there is enough variation to diagnose)
 
 - **Alpha decay:** early half (2010–16) t = 1.43 (BGE) / 1.81 (CLS); late
   half (2017–24) t = 0.47 / −0.74. The effect weakens to nothing in the
@@ -66,9 +75,11 @@ confirming the repaired weights.
 - **Control sensitivity:** dropping B/M+ROE or turnover moves the TECHMOM
   t by <0.15 — proxy quality of controls is immaterial.
 - **K-robustness:** results similar at K = 250/500/1000.
-- **Model size:** bge-large (1024-dim, paper-faithful) does not strengthen
-  the signal — embedding sophistication cannot resurrect an arbitraged
-  premium.
+- **Embedding-model sensitivity:** the paper-faithful large model (headline)
+  shows less signal than the small robustness variant (t = 0.14 vs 1.33).
+  That the result varies this much across reasonable embedding choices — and
+  never reaches significance — is itself evidence of a premium that no
+  longer exists in exploitable form.
 
 ## 5. Interpretation
 

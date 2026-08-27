@@ -73,13 +73,15 @@ def fama_macbeth(panel: pd.DataFrame, signal: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def portfolio_sort(panel: pd.DataFrame, signal: str) -> pd.DataFrame:
+def portfolio_sort(panel: pd.DataFrame, signal: str,
+                   clip_p: float | None = None) -> pd.DataFrame:
     """Orthogonalize signal on controls per month, sort into quintiles.
 
-    Paper hygiene applied: cross-sectional winsorization of forward
-    returns, micro-cap filter (bottom 20% by mcap dropped monthly, cf.
-    the paper's shell-value robustness), and both equal- and value-
-    weighted portfolio returns (paper's Table 6 is value-weighted).
+    Micro-cap filter (bottom 20% by mcap dropped monthly, cf. the paper's
+    shell-value robustness); equal- and value-weighted returns (paper's
+    Table 6 is value-weighted). Portfolio returns are clipped only at
+    clip_p (None = raw): clipping a portfolio return is not tradeable and
+    inflates t-stats by shrinking spread variance faster than its mean.
     """
     ew: dict[int, dict] = {}
     vw: dict[int, dict] = {}
@@ -88,8 +90,8 @@ def portfolio_sort(panel: pd.DataFrame, signal: str) -> pd.DataFrame:
         cs = cs[cs["ln_mcap"] >= cs["ln_mcap"].quantile(0.20)]
         if len(cs) < config.MIN_FIRMS_PER_MONTH:
             continue
-        cs = cs.assign(fwd_w=winsorize(cs["fwd_ret"]),
-                       mcap=np.exp(cs["ln_mcap"]))
+        fwd = winsorize(cs["fwd_ret"], clip_p) if clip_p else cs["fwd_ret"]
+        cs = cs.assign(fwd_w=fwd, mcap=np.exp(cs["ln_mcap"]))
         avail = [c for c in CONTROLS if cs[c].notna().sum() > 20]
         X = cs[avail].apply(winsorize).fillna(cs[avail].median())
         X = add_industry_dummies(cs, X)
@@ -173,9 +175,13 @@ def main(sample: bool, variant: str = "", returns_name: str = "returns") -> None
         fm = fama_macbeth(panel, signal)
         fm["signal"] = signal
         fm_all.append(fm)
-        ps = portfolio_sort(panel, signal)
-        ps["signal"] = signal
-        ps_all.append(ps)
+        # sensitivity: light data-error clip vs fully raw portfolio returns
+        for clip_p, label in ((config.SORT_CLIP_P, f"{config.SORT_CLIP_P:.1%}"),
+                              (None, "raw")):
+            ps = portfolio_sort(panel, signal, clip_p)
+            ps["signal"] = signal
+            ps["clip"] = label
+            ps_all.append(ps)
 
     fm = pd.concat(fm_all, ignore_index=True)
     ps = pd.concat(ps_all, ignore_index=True)
@@ -184,7 +190,8 @@ def main(sample: bool, variant: str = "", returns_name: str = "returns") -> None
 
     print("\n== Fama-MacBeth ==")
     print(fm.to_string(index=False))
-    print("\n== Portfolio sorts (orthogonalized, equal-weighted) ==")
+    print("\n== Portfolio sorts (orthogonalized; clip = portfolio-return "
+          "clipping level) ==")
     print(ps.to_string(index=False))
 
 
