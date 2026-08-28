@@ -119,11 +119,6 @@ release); the live-update key insertion point is documented in ROADMAP.md.
 
 ## 7. Post-review corrections and verification
 
-An external review of an earlier version found value-weighted portfolios
-losing ~0.5%/month over a period when the index quadrupled — impossible for
-a cap-weighted book of large patent holders — and correctly diagnosed the
-deeper issue: no tests, so impossible numbers could not fail.
-
 **Root cause.** Market cap was computed as adjusted price × current shares.
 For serial reverse-split penny stocks, Yahoo's adjustment inflates past
 prices by the cumulative split factor; combined with current share counts
